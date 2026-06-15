@@ -78,6 +78,11 @@ export class PromptRegistry {
     // Diagnosis prompt
     this.register("diagnosis", (ctx) => `你是一个中医辨证AI。根据以下症状和参考文献，输出Top-K证候概率分布。
 
+术语规范：
+- "症"指症状（symptom），如：寒热往来、头痛、口苦、失眠
+- "证"指证候/证型（syndrome/pattern），如：少阳证、肝郁气滞证、心脾两虚证
+- 禁止将症状直接加"证"字当作证型名，如"寒热往来证"是错误的，应为"少阳证"
+
 患者信息：
 - 主诉：${ctx.chiefComplaint}
 - 症状：${(ctx.symptoms as string[])?.join("、")}
