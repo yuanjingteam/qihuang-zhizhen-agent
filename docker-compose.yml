@@ -1,0 +1,61 @@
+services:
+  # Next.js App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://tcm:tcm_pass@postgres:5432/tcm_os
+      - CHROMA_URL=http://chromadb:8000
+      - LLM_BASE_URL=http://llm:11434/v1
+      - LLM_MODEL_NAME=qwen2.5:1.5b
+      - NODE_ENV=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    restart: unless-stopped
+
+  # PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tcm
+      POSTGRES_PASSWORD: tcm_pass
+      POSTGRES_DB: tcm_os
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tcm -d tcm_os"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ChromaDB (Vector Store)
+  chromadb:
+    image: chromadb/chroma:latest
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8100:8000"
+    restart: unless-stopped
+
+  # LLM Server (Ollama)
+  llm:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  chroma_data:
+  ollama_data:
